@@ -17,11 +17,12 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.scripts.json",
     "lint": "echo \"(lint pendiente de configurar)\"",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
-    "studio": "drizzle-kit studio"
+    "studio": "drizzle-kit studio",
+    "verify-connection": "tsx scripts/verify-connection.ts"
   },
   "dependencies": {
     "@tradevision/contracts": "workspace:*",
