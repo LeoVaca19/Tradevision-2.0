@@ -14,7 +14,8 @@
     "test": "turbo run test",
     "db:generate": "pnpm --filter @tradevision/db generate",
     "db:migrate": "pnpm --filter @tradevision/db migrate",
-    "db:studio": "pnpm --filter @tradevision/db studio"
+    "db:studio": "pnpm --filter @tradevision/db studio",
+    "db:setup": "pnpm --filter @tradevision/db exec tsx src/setup.ts"
   },
   "devDependencies": {
     "@types/node": "^22.7.4",
