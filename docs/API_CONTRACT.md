@@ -1,14 +1,19 @@
-# API_CONTRACT.md — borrador (Fase 1, auditoría)
+# API_CONTRACT.md — contrato vigente en tradevision-v2
 
-> **Estado: BORRADOR.** Este documento describe los endpoints y contratos que existían en
-> `../../tradevision/` (proyecto antiguo, solo lectura). No describe nada implementado todavía en
-> `tradevision-v2`. Se actualizará bloque a bloque durante la Fase 2 de migración — cuando un
-> bloque quede migrado y reescrito, su sección aquí pasa de "heredado" a "vigente" con la firma
-> real de v2 (que puede diferir, sobre todo en `packages/db` porque el esquema se rediseña).
+> **Estado (actualizado al cerrar el Bloque 8): implementado y verificado.** Todo lo que
+> describe este documento existe hoy en `tradevision-v2` con esta firma — Server Actions,
+> Route Handlers y fachada de datos migrados (Bloque 8) contra los repos reales del Bloque 5
+> y probados contra Supabase real. Las funciones de la fachada (§3) devuelven la forma de fila
+> de `packages/db` (números ya convertidos de `numeric`→`number`, ver
+> `packages/db/src/numeric.ts`), no necesariamente la forma exacta de `@tradevision/contracts`
+> — esa reconciliación es trabajo del Bloque 9 (UI) cuando construya cada página.
+>
+> Lo único que NO existe todavía: las páginas que consumen esto (Bloque 9, sin empezar) y
+> cualquier endpoint de Mentor IA (Bloque 7, pausado sin API key — ver `docs/STATUS.md`).
 >
 > "Backend" en este proyecto no es un servidor HTTP tradicional: son tres capas dentro de
 > `apps/web` (Server Actions, Route Handlers, y una fachada de datos sin HTTP). Ver
-> `MIGRATION_PLAN.md` para la propuesta de estructura de carpetas.
+> `MIGRATION_PLAN.md` para la estructura de carpetas y `docs/STATUS.md` para el estado por área.
 
 ---
 
