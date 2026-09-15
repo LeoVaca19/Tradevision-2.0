@@ -1,0 +1,221 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compute — regresión (dataset fijo ⇒ salida fija) > snapshot de las métricas del Libro Verificado 1`] = `
+[
+  {
+    "axis": null,
+    "book": "verified",
+    "detail": null,
+    "engineVersion": "0.2.0",
+    "filtersHash": null,
+    "metric": "win_rate",
+    "sampleSize": 60,
+    "sealed": true,
+    "value": {
+      "kind": "value",
+      "value": 0.5,
+    },
+    "verifiedPeriodEnd": "2026-03-01T16:00:00.000Z",
+    "verifiedPeriodStart": "2026-01-01T16:00:00.000Z",
+  },
+  {
+    "axis": null,
+    "book": "verified",
+    "detail": null,
+    "engineVersion": "0.2.0",
+    "filtersHash": null,
+    "metric": "expectancy",
+    "sampleSize": 60,
+    "sealed": true,
+    "value": {
+      "kind": "value",
+      "value": 0.5,
+    },
+    "verifiedPeriodEnd": "2026-03-01T16:00:00.000Z",
+    "verifiedPeriodStart": "2026-01-01T16:00:00.000Z",
+  },
+  {
+    "axis": null,
+    "book": "verified",
+    "detail": null,
+    "engineVersion": "0.2.0",
+    "filtersHash": null,
+    "metric": "r_multiple_avg",
+    "sampleSize": 60,
+    "sealed": true,
+    "value": {
+      "kind": "value",
+      "value": 2,
+    },
+    "verifiedPeriodEnd": "2026-03-01T16:00:00.000Z",
+    "verifiedPeriodStart": "2026-01-01T16:00:00.000Z",
+  },
+  {
+    "axis": null,
+    "book": "verified",
+    "detail": null,
+    "engineVersion": "0.2.0",
+    "filtersHash": null,
+    "metric": "profit_factor",
+    "sampleSize": 60,
+    "sealed": true,
+    "value": {
+      "kind": "value",
+      "value": 2,
+    },
+    "verifiedPeriodEnd": "2026-03-01T16:00:00.000Z",
+    "verifiedPeriodStart": "2026-01-01T16:00:00.000Z",
+  },
+  {
+    "axis": null,
+    "book": "verified",
+    "detail": {
+      "maxDrawdownCurrency": 600,
+      "maxDrawdownR": 6,
+      "propFirmReference": "Referencia: muchas prop firms fijan el límite de drawdown total entre el 8% y el 12% de la cuenta. Comparación informativa, no es consejo.",
+    },
+    "engineVersion": "0.2.0",
+    "filtersHash": null,
+    "metric": "max_drawdown",
+    "sampleSize": 60,
+    "sealed": true,
+    "value": {
+      "kind": "value",
+      "value": 6,
+    },
+    "verifiedPeriodEnd": "2026-03-01T16:00:00.000Z",
+    "verifiedPeriodStart": "2026-01-01T16:00:00.000Z",
+  },
+  {
+    "axis": null,
+    "book": "verified",
+    "detail": {
+      "currentStreak": -2,
+      "longestLoss": 5,
+      "longestWin": 6,
+    },
+    "engineVersion": "0.2.0",
+    "filtersHash": null,
+    "metric": "streaks",
+    "sampleSize": 60,
+    "sealed": true,
+    "value": {
+      "kind": "value",
+      "value": 6,
+    },
+    "verifiedPeriodEnd": "2026-03-01T16:00:00.000Z",
+    "verifiedPeriodStart": "2026-01-01T16:00:00.000Z",
+  },
+  {
+    "axis": null,
+    "book": "verified",
+    "detail": null,
+    "engineVersion": "0.2.0",
+    "filtersHash": null,
+    "metric": "sharpe_ratio",
+    "sampleSize": 60,
+    "sealed": true,
+    "value": {
+      "kind": "insufficient_data",
+      "sampleSize": 60,
+    },
+    "verifiedPeriodEnd": "2026-03-01T16:00:00.000Z",
+    "verifiedPeriodStart": "2026-01-01T16:00:00.000Z",
+  },
+  {
+    "axis": null,
+    "book": "verified",
+    "detail": null,
+    "engineVersion": "0.2.0",
+    "filtersHash": null,
+    "metric": "z_score",
+    "sampleSize": 60,
+    "sealed": true,
+    "value": {
+      "kind": "insufficient_data",
+      "sampleSize": 60,
+    },
+    "verifiedPeriodEnd": "2026-03-01T16:00:00.000Z",
+    "verifiedPeriodStart": "2026-01-01T16:00:00.000Z",
+  },
+]
+`;
+
+exports[`computeRadarScore — invariantes FR-65 > snapshot del radar para dataset fijo 1`] = `
+{
+  "axes": [
+    {
+      "axis": "win_rate",
+      "book": "verified",
+      "sampleSize": 60,
+      "sealed": true,
+      "value": {
+        "kind": "value",
+        "value": 50,
+      },
+      "weight": 0.15,
+    },
+    {
+      "axis": "profit_factor",
+      "book": "verified",
+      "sampleSize": 60,
+      "sealed": true,
+      "value": {
+        "kind": "value",
+        "value": 100,
+      },
+      "weight": 0.2,
+    },
+    {
+      "axis": "consistency",
+      "book": "verified",
+      "sampleSize": 60,
+      "sealed": true,
+      "value": {
+        "kind": "value",
+        "value": 25,
+      },
+      "weight": 0.15,
+    },
+    {
+      "axis": "risk_management",
+      "book": "verified",
+      "sampleSize": 60,
+      "sealed": true,
+      "value": {
+        "kind": "value",
+        "value": 100,
+      },
+      "weight": 0.15,
+    },
+    {
+      "axis": "avg_win_loss",
+      "book": "verified",
+      "sampleSize": 60,
+      "sealed": true,
+      "value": {
+        "kind": "value",
+        "value": 80,
+      },
+      "weight": 0.15,
+    },
+    {
+      "axis": "recovery",
+      "book": "verified",
+      "sampleSize": 60,
+      "sealed": true,
+      "value": {
+        "kind": "value",
+        "value": 100,
+      },
+      "weight": 0.2,
+    },
+  ],
+  "composite": {
+    "kind": "value",
+    "value": 78.25,
+  },
+  "engineVersion": "0.2.0",
+  "sealed": false,
+}
+`;
