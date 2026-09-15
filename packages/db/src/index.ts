@@ -1,6 +1,8 @@
 // @tradevision/db — client + repositorios.
-//
-// Los repositorios (trades, catalogs, stats, accounts, users) se agregan acá
-// en el resto del Bloque 5, según se vayan escribiendo.
 export * as schema from "./schema.js";
 export { getDb, type DB } from "./client.js";
+export * from "./repositories/catalogs.js";
+export * from "./repositories/trades.js";
+export * from "./repositories/users.js";
+export * from "./repositories/stats.js";
+export * from "./repositories/accounts.js";
