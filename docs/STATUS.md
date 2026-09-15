@@ -24,14 +24,16 @@
 - `app/trades/actions.ts` — las 8 Server Actions (alta manual, anotaciones, diario, anotación pública, catálogos, cuentas).
 - `app/api/uploads/route.ts` + `[key]/route.ts` — subida/lectura de capturas, verificadas con curl contra el servidor real (503/422/400/403 según el caso).
 - **Dirección visual confirmada** (charla completa, no repetir): se lleva el sistema "diario editorial sobre parchment" del proyecto antiguo (inspirado en Flatfile), reescrito limpio sobre los tokens del Bloque 2. Solo modo claro. Inter (400/500) únicamente — Source Serif 4 NO se carga hasta que una pantalla real la necesite. Accent "Midnight Ink" casi negro, parchment restringido al hero, pills sin sombra, números financieros en monoespaciada, Radar Score como SVG real en tono Declarado (sin librería — ver `../../tradevision/components/dashboard/RadarChart.tsx` como referencia de cómo se hizo, no copiar tal cual).
+- **Bloque 9 completo (UI):** las 6 páginas construidas y verificadas en el navegador real (visual + responsive mobile + flujos de escritura) contra el modo demo: landing (`/`), `/dashboard` (métricas + Radar Score SVG + Plan vs Ejecutado), `/trades` (resumen + curva de equity + calendario + toggle Galería/Tabla con preferencia en `localStorage` + Libro de No Tomadas), `/trades/new` (alta manual con `useActionState`), `/trades/:book/:id` (ficha: `PropertiesPanel` con chips de confluencias/estados emocionales + diario BlockNote con autoguardado + anotación pública BlockNote sólo para tier Mentor en Libro Verificado — dos ciclos de autoguardado desacoplados, confirmado FR-9), `/[handle]` (Perfil Público con gating real por `publicProfileLevel`, honesto: sin listado de operaciones porque `lib/data.ts` no expone ese facade todavía, no se inventó). `apps/web/app/not-found.tsx` propio (el 404 por defecto de Next ignora `color-scheme:light`). `@blocknote/*` y `@mantine/*` instalados y confirmados en las versiones ya fijadas (`0.45.0` / `^8.3.4`).
+- `apps/web/app/globals.css` — capa de skin "parchment/ink" nueva, sin Source Serif 4 (sólo Inter vía `next/font/google`, pesos 400/500).
+- `apps/web/lib/format.ts` (nuevo) — formato compartido de dinero/fecha/etiquetas de métricas y ejes del Radar.
 
-**Falta (Bloque 9, no empezado):**
-- Todas las páginas: landing (`/`), dashboard (`/dashboard`), diario (`/trades`, con toggle Galería/Tabla), alta manual (`/trades/new`), ficha del trade (`/trades/:book/:id` — propiedades + diario + anotación pública), Perfil Público (`/[handle]`, hoy sin ninguna lógica).
-- Todos los componentes: `StatBadge`, `MetricCard`, `RadarChart`, editores BlockNote (`TradeJournalEditor`, `PublicAnnotationEditor`, wrapper `next/dynamic`), `PropertiesPanel`, formulario de alta, tarjetas de galería, calendario, curva de equity, nav.
-- `apps/web/app/globals.css` — la capa de skin "parchment/ink" nueva (la vieja está en `../../tradevision/apps/web/app/globals.css` como referencia).
-- Dependencias que faltan en `package.json`: `@blocknote/core`, `@blocknote/react`, `@blocknote/mantine`, `@mantine/core`, `@mantine/hooks` (todas ya en `pnpm.overrides` de la raíz, pero no instaladas en este paquete todavía).
+**Falta (fuera de alcance del Bloque 9, a propósito):**
+- `TradeAttachments` (subida de capturas) — no estaba en la lista de componentes pedida y en este entorno demo `/api/uploads` devolvería 503 (sin `SUPABASE_SERVICE_ROLE_KEY`/`R2_*`); la Galería ya sabe pintar `firstAttachmentKey` si algún día llega poblado.
+- `/trades/compare` y `AccountBar` (cuentas nombrables) — no estaban en la lista de páginas del Bloque 9; `lib/data.ts` ya tiene `listTradingAccounts`/`compareTradingAccounts` listos para cuando se pida esa UI.
+- Perfil Público nivel "detail": falta un facade `listVerifiedTrades()` (no existe hoy) para el detalle de operaciones — documentado en la propia página, no se fabricó un listado.
 
-**Bloqueos:** ninguno técnico — listo para arrancar.
+**Bloqueos:** ninguno técnico.
 
 ---
 
@@ -78,8 +80,8 @@
 
 **Falta:**
 - Sin tests de `apps/web` (páginas, fachada, Server Actions) ni E2E — mismo gap que tenía el proyecto antiguo, nunca resuelto.
-- Verificar Bloque 9 en el navegador real (visual, responsive, accesibilidad) en cuanto exista.
-- `pnpm --filter @tradevision/web lint` usa `next lint` (ESLint 8) — validar que siga limpio a medida que se agreguen páginas/componentes reales.
+- Accesibilidad del Bloque 9 (lectores de pantalla, navegación por teclado a fondo) sin auditar todavía — sólo se verificó visual + responsive + flujos de escritura en el navegador real.
+- `pnpm --filter @tradevision/web lint` usa `next lint` (ESLint 8) — validado en verde con las páginas/componentes reales del Bloque 9; seguir vigilando a medida que se agreguen más.
 
 **Bloqueos:** ninguno.
 
