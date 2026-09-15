@@ -1,0 +1,27 @@
+node_modules/
+dist/
+.next/
+out/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# env
+.env*
+!.env.example
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# drizzle
+packages/db/drizzle/meta/_journal.json.bak
+
+# pglite dev db
+.pglite-dev/
+
+# claude code / skills locales (re-instalables con: npx skills add …)
+.claude/
+.agents/

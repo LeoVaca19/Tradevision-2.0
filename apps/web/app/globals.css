@@ -1,0 +1,11 @@
+/* Sin skin todavía. La dirección visual de tradevision/ (Flatfile parchment/ink)
+   es una decisión de diseño a retomar o repensar, no código a copiar. */
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
