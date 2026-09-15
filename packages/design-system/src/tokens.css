@@ -1,1 +1,120 @@
-/* @tradevision/design-system — tokens CSS. Sin definir todavía. */
+/*
+ * TradeVision — tokens semánticos (PRD Cambio 8, Tech Spec §12).
+ *
+ * Estética de confianza / infraestructura. NO: degradados llamativos, confeti,
+ * badges de actividad, números gigantes fuera de contexto, animaciones de
+ * recompensa. Referencia negativa explícita: "no al patrón visual tipo
+ * awaketrader".
+ *
+ * Todos los estados se comunican con color + icono + texto, nunca sólo color
+ * (FR-13). Contraste objetivo WCAG 2.1 AA en claro y oscuro.
+ */
+
+:root {
+  /* Superficies */
+  --surface-page: #f7f8fa;
+  --surface-card: #ffffff;
+  --surface-sunken: #eef0f4;
+  --border-subtle: #dfe3ea;
+  --border-strong: #c3c9d4;
+
+  /* Texto */
+  --text-primary: #1a1f2b;
+  --text-secondary: #5a6472;
+  --text-muted: #8b95a4;
+
+  /* Acento — sobrio, no "señal de trading" */
+  --accent: #2b5cff;
+  --accent-fg: #ffffff;
+  --accent-bg: #e8eeff;
+
+  /* Estados de verificación (FR-13) — cada uno con -fg, -bg, -icon */
+  --state-verified: #1f7a4d;
+  --state-verified-fg: #0d3d26;
+  --state-verified-bg: #e4f3ec;
+  --state-verified-icon: "\2714"; /* ✔ */
+
+  --state-declared: #8a6d1a;
+  --state-declared-fg: #4a3a0d;
+  --state-declared-bg: #f7efdb;
+  --state-declared-icon: "\25CB"; /* ○ */
+
+  --state-stale: #8b6f4e;
+  --state-stale-fg: #4a3a27;
+  --state-stale-bg: #f1e9df;
+  --state-stale-icon: "\21BB"; /* ↻ */
+
+  --state-revoked: #a4342c;
+  --state-revoked-fg: #55160f;
+  --state-revoked-bg: #f7e2e0;
+  --state-revoked-icon: "\2715"; /* ✕ */
+
+  --state-insufficient: #5a6472;
+  --state-insufficient-fg: #2b323d;
+  --state-insufficient-bg: #eceef2;
+  --state-insufficient-icon: "\2014"; /* — */
+
+  /* Datos: paleta accesible por serie (se aplica antes de codear cualquier gráfico) */
+  --series-1: #2b5cff;
+  --series-2: #1f7a4d;
+  --series-3: #8a6d1a;
+  --series-4: #7a3fb0;
+  --series-5: #0f7c8c;
+  --series-6: #a4342c;
+
+  /* Tipografía */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+  /* Radios y sombras — planos, discretos */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-card: 0 1px 2px rgba(20, 25, 40, 0.06), 0 1px 3px rgba(20, 25, 40, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-page: #0e1116;
+    --surface-card: #161b22;
+    --surface-sunken: #1b2129;
+    --border-subtle: #2a313c;
+    --border-strong: #3a434f;
+
+    --text-primary: #e8ecf2;
+    --text-secondary: #a6b0be;
+    --text-muted: #6f7a8a;
+
+    --accent: #6b93ff;
+    --accent-fg: #0b1220;
+    --accent-bg: #1a2540;
+
+    --state-verified: #4cc48a;
+    --state-verified-fg: #d7f2e5;
+    --state-verified-bg: #143528;
+
+    --state-declared: #d8b24a;
+    --state-declared-fg: #f6ecd2;
+    --state-declared-bg: #3a2f13;
+
+    --state-stale: #c79a6d;
+    --state-stale-fg: #f0e4d6;
+    --state-stale-bg: #33271b;
+
+    --state-revoked: #e0655b;
+    --state-revoked-fg: #f8ded9;
+    --state-revoked-bg: #3a1713;
+
+    --state-insufficient: #9aa4b2;
+    --state-insufficient-fg: #dfe3ea;
+    --state-insufficient-bg: #232932;
+
+    --series-1: #6b93ff;
+    --series-2: #4cc48a;
+    --series-3: #d8b24a;
+    --series-4: #b98fe0;
+    --series-5: #4fc3d4;
+    --series-6: #e0655b;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
