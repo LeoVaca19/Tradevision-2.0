@@ -64,7 +64,8 @@ contra el nuevo esquema/skill, sin copiar-pegar y parchar después. **DESCARTAR*
 | `components/SiteNav.tsx` | REESCRIBIR | Trivial, sin lógica de negocio. |
 | `components/dashboard/RadarChart.tsx` | REESCRIBIR | El Tech Spec pide un radar real; el proyecto antiguo lo pintaba como tarjetas (sin librería de gráficos instalada). Rehacer con una librería de charts elegida a propósito. |
 | `app/globals.css` + `.tv-*` classes | DESCARTAR | ~250 líneas de utilidades ad-hoc sin Tailwind/CSS Modules. Reemplazar por lo que decida la skill de diseño para v2. |
-| `next.config.mjs`, `.eslintrc.json`, `tsconfig.json`, `package.json` (apps/web) | MIGRAR | Ya replicado en v2 casi 1:1 (verificado: `transpilePackages`, `serverExternalPackages`, versiones fijadas de React/Next/Mantine coinciden). Sin acción — es confirmación, no trabajo pendiente. |
+| `next.config.mjs`, `tsconfig.json`, `package.json` (apps/web) | MIGRAR | Ya replicado en v2 casi 1:1 (verificado: `transpilePackages`, `serverExternalPackages`, versiones fijadas de React/Next/Mantine coinciden). Sin acción — es confirmación, no trabajo pendiente. |
+| `.eslintrc.json` (apps/web) | MIGRAR | **Corrección (Bloque 1):** esta fila decía "ya replicado" en la versión original de este plan — era incorrecto, el archivo no existía en el scaffold de v2 (`next lint` caía en un prompt interactivo de setup). Copiado del proyecto antiguo (`{"extends": "next/core-web-vitals"}`, una línea, sin lógica) al cerrar el Bloque 1 porque bloqueaba el lint en verde. |
 
 ### 1.2 Backend de datos — `packages/db/`
 
