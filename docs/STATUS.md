@@ -73,6 +73,13 @@
 
 ## QA
 
+**Rol adicional: triage/ruteo.** Leonardo prueba la app desde esta sesión y describe acá
+bugs o cambios que quiere. Esta sesión no los implementa — diagnostica a qué área
+pertenecen (Frontend/Backend/IA Mentor, o "cross" si toca más de una) y devuelve un
+prompt listo para pegar en la sesión correspondiente, con el síntoma observado, el/los
+archivo(s) probables y el resultado esperado. Ver el prompt de arranque de esta sesión
+para el formato exacto.
+
 **Hecho:**
 - Cada bloque cerrado con `typecheck`/`build`/`lint`/`test` en verde antes de commitear. Estado actual del monorepo: `typecheck` 12/12, `build` 7/7, `lint` 11/11, `test` 48/48 (25 `engine` + 23 `integrations`).
 - Verificación real contra Supabase (no solo mocks) en los bloques de BD: `db:setup` idempotente, advisories de seguridad/performance revisados con `mcp__supabase__get_advisors` y en cero.
