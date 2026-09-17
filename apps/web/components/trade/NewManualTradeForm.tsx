@@ -64,17 +64,6 @@ export function NewManualTradeForm() {
 
       <div className="tv-form-row">
         <label className="tv-field">
-          <span>Comisión</span>
-          <input name="commission" type="number" step="any" defaultValue={0} />
-        </label>
-        <label className="tv-field">
-          <span>Swap</span>
-          <input name="swap" type="number" step="any" defaultValue={0} />
-        </label>
-      </div>
-
-      <div className="tv-form-row">
-        <label className="tv-field">
           <span>P&amp;L en divisa</span>
           <input name="pnlCurrency" type="number" step="any" required />
         </label>
