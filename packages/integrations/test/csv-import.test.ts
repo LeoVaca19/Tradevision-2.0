@@ -48,4 +48,15 @@ describe("parseTradesCsv (FR-67 fase 1)", () => {
     expect(failed[0]!.error).toMatch(/lado desconocido/);
     expect(failed[1]!.error).toMatch(/fecha inválida/);
   });
+
+  it("no fabrica un 0 para comisión/swap ilegibles — marca la fila como fallida", () => {
+    const csv = [
+      "Symbol,Side,Volume,Entry,Exit,Open Time,Close Time,Commission,Swap,PnL",
+      "EURUSD,buy,1,1.1,1.11,2026-01-02 09:00,2026-01-02 11:30,n/a,0,50",
+    ].join("\n");
+    const { trades, failed } = parseTradesCsv(csv);
+    expect(trades).toHaveLength(0);
+    expect(failed).toHaveLength(1);
+    expect(failed[0]!.error).toMatch(/"commission" no es un número/);
+  });
 });

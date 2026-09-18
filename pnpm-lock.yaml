@@ -110,6 +110,9 @@ importers:
       '@tradevision/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@tradevision/engine':
+        specifier: workspace:*
+        version: link:../engine
       drizzle-orm:
         specifier: ^0.45.0
         version: 0.45.2(postgres@3.4.9)

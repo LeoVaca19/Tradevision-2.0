@@ -22,10 +22,12 @@
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
     "studio": "drizzle-kit studio",
-    "verify-connection": "tsx scripts/verify-connection.ts"
+    "verify-connection": "tsx scripts/verify-connection.ts",
+    "materialize-stats": "tsx src/materialize-stats.ts"
   },
   "dependencies": {
     "@tradevision/contracts": "workspace:*",
+    "@tradevision/engine": "workspace:*",
     "drizzle-orm": "^0.45.0",
     "postgres": "^3.4.4"
   },

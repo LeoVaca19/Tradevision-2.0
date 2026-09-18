@@ -116,10 +116,11 @@ const num = (v: string | undefined, field: string): number => {
   return n;
 };
 
-const optNum = (v: string | undefined): number => {
+const optNum = (v: string | undefined, field: string): number => {
   if (v == null || v.trim() === "") return 0;
   const n = Number(v.replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
+  if (!Number.isFinite(n)) throw new Error(`"${field}" no es un número: "${v}"`);
+  return n;
 };
 
 const parseSide = (v: string | undefined): "long" | "short" => {
@@ -184,8 +185,8 @@ export function parseTradesCsv(csv: string): CsvImportResult {
         exitPrice: num(mapped.exitPrice, "exit"),
         openedAt: parseDate(mapped.openedAt, "open time"),
         closedAt: parseDate(mapped.closedAt, "close time"),
-        commission: optNum(mapped.commission),
-        swap: optNum(mapped.swap),
+        commission: optNum(mapped.commission, "commission"),
+        swap: optNum(mapped.swap, "swap"),
         pnlCurrency: num(mapped.pnlCurrency, "pnl"),
         pnlR:
           mapped.pnlR != null && mapped.pnlR.trim() !== ""

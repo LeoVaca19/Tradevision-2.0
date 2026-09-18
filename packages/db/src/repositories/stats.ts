@@ -1,5 +1,6 @@
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import type {
+  EngineOptions,
   ManualTrade,
   NotTakenTrade,
   RadarScore,
@@ -8,6 +9,7 @@ import type {
   TradeSet,
   VerifiedTrade,
 } from "@tradevision/contracts";
+import { ENGINE_VERSION, compute, computeRadarScore, filtersHash as computeFiltersHash } from "@tradevision/engine";
 import type { DB } from "../client.js";
 import {
   annotationConfluences,
@@ -256,6 +258,64 @@ export async function saveStatSnapshots(
   }
 
   if (rows.length > 0) await db.insert(statSnapshots).values(rows);
+}
+
+// ─────────────────────────  Materialización (job/endpoint)  ─────────────────────────
+
+export interface MaterializeStatSnapshotsOptions {
+  engineVersion?: string;
+  /** Instante de referencia del motor. Por defecto, ahora. */
+  asOf?: string;
+  filter?: EngineOptions["filter"];
+  radarWeights?: EngineOptions["radarWeights"];
+}
+
+export interface MaterializeStatSnapshotsResult {
+  metrics: StatResult[];
+  radar: RadarScore;
+}
+
+/**
+ * Corre el motor (`compute` + `computeRadarScore`) sobre el `TradeSet` real del
+ * usuario y persiste el resultado en `stat_snapshots` — el paso que faltaba
+ * entre `loadTradeSet`/`saveStatSnapshots` (Tech Spec §7, recalculo descrito en
+ * §7: "un job Inngest re-materializa `stat_snapshots`..."). Esta función ES el
+ * cuerpo de ese job; no decide cuándo correr (eso lo dispara quien la invoque:
+ * un job Inngest, una Server Action, un cron) ni construye esa infraestructura,
+ * ausente todavía en el monorepo (`STATUS.md`).
+ *
+ * No incluye `computePlanVsExecuted`: esa vista es siempre Declarada y no tiene
+ * fila en `stat_snapshots` (no aplica un Sello que preservar entre corridas).
+ */
+export async function materializeStatSnapshots(
+  db: DB,
+  userId: string,
+  opts: MaterializeStatSnapshotsOptions = {},
+): Promise<MaterializeStatSnapshotsResult> {
+  const engineVersion = opts.engineVersion ?? ENGINE_VERSION;
+  const engineOpts: EngineOptions = {
+    engineVersion,
+    asOf: opts.asOf ?? new Date().toISOString(),
+    filter: opts.filter,
+    radarWeights: opts.radarWeights,
+  };
+
+  const set = await loadTradeSet(db, userId, {
+    periodStart: opts.filter?.periodStart ? new Date(opts.filter.periodStart) : undefined,
+    periodEnd: opts.filter?.periodEnd ? new Date(opts.filter.periodEnd) : undefined,
+  });
+
+  const metrics = compute(set, engineOpts);
+  const radar = computeRadarScore(set, engineOpts);
+
+  await saveStatSnapshots(db, userId, {
+    engineVersion,
+    filtersHash: computeFiltersHash(engineOpts.filter),
+    metrics,
+    radar,
+  });
+
+  return { metrics, radar };
 }
 
 export async function getLatestStatSnapshots(
