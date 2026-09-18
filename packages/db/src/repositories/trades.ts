@@ -10,6 +10,7 @@ import {
   notTakenTrades,
   publicAnnotations,
   tradeAnnotations,
+  tradeAttachments,
   users,
   verifiedTrades,
 } from "../schema.js";
@@ -25,7 +26,8 @@ import { toDbNumeric, toDbNumericOrNull, toNumber, toNumberOrNull } from "../num
 
 export type TradeBook = "verified" | "manual" | "not_taken";
 
-const BOOK_FK = {
+/** Exportado: `attachments.ts` lo reusa para resolver la anotación de (book, tradeId). */
+export const BOOK_FK = {
   verified: "verifiedTradeId",
   manual: "manualTradeId",
   not_taken: "notTakenTradeId",
@@ -166,7 +168,7 @@ export interface ManualTradeWithAnnotationSummary {
   closedAt: Date;
   pnlCurrency: number;
   pnlR: number | null;
-  /** Primer elemento de `props.extra.attachments`, o null si no hay ninguno. */
+  /** `key` del adjunto más antiguo en `trade_attachments`, o null si no hay ninguno. */
   firstAttachmentKey: string | null;
   /** `journal_note` es un array de bloques BlockNote con al menos uno. */
   hasJournalNote: boolean;
@@ -192,13 +194,17 @@ export async function listManualTradesWithAnnotationSummary(
       closedAt: manualTrades.closedAt,
       pnlCurrency: manualTrades.pnlCurrency,
       pnlR: manualTrades.pnlR,
-      firstAttachmentKey: sql<string | null>`
-        case
-          when jsonb_typeof(${tradeAnnotations.extra} -> 'attachments') = 'array'
-          then ${tradeAnnotations.extra} -> 'attachments' ->> 0
-          else null
-        end
-      `,
+      // Subconsulta correlacionada (no LEFT JOIN directo a trade_attachments):
+      // un JOIN plano produciría un fan-out de una fila por adjunto y rompería
+      // "una fila por operación" que pide esta vista. Si tradeAnnotations es
+      // null (sin anotación todavía), la subconsulta no matchea y da null.
+      firstAttachmentKey: sql<string | null>`(
+        select ${tradeAttachments.key}
+        from ${tradeAttachments}
+        where ${tradeAttachments.annotationId} = ${tradeAnnotations.id}
+        order by ${tradeAttachments.createdAt} asc
+        limit 1
+      )`,
       hasJournalNote: sql<boolean>`
         coalesce(
           jsonb_typeof(${tradeAnnotations.journalNote}) = 'array'

@@ -129,3 +129,53 @@ export async function createTradingAccountAction(input: {
 }) {
   return data.createTradingAccount(input);
 }
+
+// ─────────────────────────────  Adjuntos (capturas)  ─────────────────────────────
+// El cliente ya subió el fichero (POST /api/uploads → PUT al storage, Bloque 8)
+// antes de llamar a createAttachmentAction — estas acciones sólo persisten qué
+// `key` quedó asociada a la operación. Superar el límite de 3 o no ser dueño
+// del adjunto son fallos ESPERABLES (el usuario los ve y actúa) → { ok:false },
+// no un error sin capturar.
+
+const AttachmentInput = z.object({
+  book: TradeBook,
+  tradeId: z.string().uuid(),
+  key: z.string().min(1),
+  thumbKey: z.string().nullable().optional(),
+  mime: z.string().min(1),
+  size: z.number().int().positive(),
+  width: z.number().int().positive().nullable().optional(),
+  height: z.number().int().positive().nullable().optional(),
+});
+
+export async function createAttachmentAction(input: z.infer<typeof AttachmentInput>) {
+  const parsed = AttachmentInput.parse(input);
+  try {
+    const attachment = await data.createAttachment(parsed);
+    revalidatePath(`/trades/${parsed.book}/${parsed.tradeId}`);
+    return { ok: true as const, attachment };
+  } catch (err) {
+    return { ok: false as const, error: err instanceof Error ? err.message : "no se pudo adjuntar la captura" };
+  }
+}
+
+export async function listAttachmentsAction(book: z.infer<typeof TradeBook>, tradeId: string) {
+  return data.listAttachments(book, tradeId);
+}
+
+const DeleteAttachmentInput = z.object({
+  id: z.string().uuid(),
+  book: TradeBook,
+  tradeId: z.string().uuid(),
+});
+
+export async function deleteAttachmentAction(input: z.infer<typeof DeleteAttachmentInput>) {
+  const parsed = DeleteAttachmentInput.parse(input);
+  try {
+    await data.deleteAttachment(parsed);
+    revalidatePath(`/trades/${parsed.book}/${parsed.tradeId}`);
+    return { ok: true as const };
+  } catch (err) {
+    return { ok: false as const, error: err instanceof Error ? err.message : "no se pudo borrar la captura" };
+  }
+}

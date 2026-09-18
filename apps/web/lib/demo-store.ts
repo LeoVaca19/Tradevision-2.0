@@ -75,6 +75,21 @@ export interface Catalog {
   scope: "global" | "custom";
 }
 
+/** Espejo en memoria de `trade_attachments` (`@tradevision/db`). Máx. 3 por operación
+ * — mismo límite que `MAX_ATTACHMENTS_PER_TRADE` del repo real, forzado también acá. */
+export const MAX_ATTACHMENTS_PER_TRADE = 3;
+
+export interface DemoAttachment {
+  id: string;
+  key: string;
+  thumbKey: string | null;
+  mime: string;
+  size: number;
+  width: number | null;
+  height: number | null;
+  createdAt: string;
+}
+
 const g = globalThis as unknown as { __tvDemo?: DemoState };
 
 export interface DemoState {
@@ -88,6 +103,7 @@ export interface DemoState {
   annotations: Map<string, Annotation>; // key: `${book}:${tradeId}`
   publicAnnotations: Map<string, PublicAnnotation[]>; // key: verifiedTradeId
   tradingAccounts: DemoTradingAccount[];
+  attachments: Map<string, DemoAttachment[]>; // key: `${book}:${tradeId}`
 }
 
 function seed(): DemoState {
@@ -171,6 +187,7 @@ function seed(): DemoState {
     })),
     annotations: new Map(),
     publicAnnotations: new Map(),
+    attachments: new Map(),
     // Sólo UNA cuenta sintética: la demo no modela varias cuentas de bróker.
     // `compareTradingAccounts` en modo "vs_account" no está disponible aquí —
     // necesita BD real (ver lib/data.ts).

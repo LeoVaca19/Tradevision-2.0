@@ -6,3 +6,4 @@ export * from "./repositories/trades.js";
 export * from "./repositories/users.js";
 export * from "./repositories/stats.js";
 export * from "./repositories/accounts.js";
+export * from "./repositories/attachments.js";

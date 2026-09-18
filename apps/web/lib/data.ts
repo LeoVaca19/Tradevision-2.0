@@ -10,7 +10,14 @@ import type {
 } from "@tradevision/contracts";
 import { compute, computePlanVsExecuted, computeRadarScore, ENGINE_VERSION } from "@tradevision/engine";
 import { demoTradeSet } from "@/lib/demo-data";
-import { demo, findCore, type DemoTradingAccount, type DemoUser } from "@/lib/demo-store";
+import {
+  demo,
+  findCore,
+  MAX_ATTACHMENTS_PER_TRADE,
+  type DemoAttachment,
+  type DemoTradingAccount,
+  type DemoUser,
+} from "@/lib/demo-store";
 import type { TradeBook } from "@/lib/trade-view";
 
 /**
@@ -70,8 +77,7 @@ export async function listManualTradesWithAnnotationSummary(): Promise<ManualTra
     const s = demo();
     return s.manual.map((t) => {
       const ann = s.annotations.get(`manual:${t.id}`);
-      const extra = (ann?.extra ?? {}) as Record<string, unknown>;
-      const attachments = Array.isArray(extra.attachments) ? (extra.attachments as string[]) : [];
+      const attachments = s.attachments.get(`manual:${t.id}`) ?? [];
       return {
         id: t.id,
         instrument: t.instrument,
@@ -80,7 +86,7 @@ export async function listManualTradesWithAnnotationSummary(): Promise<ManualTra
         closedAt: t.closedAt,
         pnlCurrency: t.pnlCurrency,
         pnlR: t.pnlR,
-        firstAttachmentKey: attachments[0] ?? null,
+        firstAttachmentKey: attachments[0]?.key ?? null,
         hasJournalNote: Array.isArray(ann?.journalNote) && ann.journalNote.length > 0,
       };
     });
@@ -144,6 +150,106 @@ export async function getTradeView(book: TradeBook, id: string): Promise<TradeVi
   const db = await import("@tradevision/db");
   const conn = await db.getDb();
   return db.getTradeWithAnnotation(conn, (await currentUser()).id, { book, tradeId: id });
+}
+
+// ─────────────────────────────  Adjuntos (capturas)  ─────────────────────────────
+// Tech Spec §6.1 / §4.6 Cambio 3. `POST /api/uploads` + `PUT` al storage (Bloque 8)
+// ya suben el fichero real; estas funciones sólo registran qué `key` quedó
+// asociada a qué operación. Máx. `MAX_ATTACHMENTS_PER_TRADE` por operación,
+// forzado en el repo real (`@tradevision/db`) — no sólo acá.
+
+export interface TradeAttachment {
+  id: string;
+  key: string;
+  thumbKey: string | null;
+  mime: string;
+  size: number;
+  width: number | null;
+  height: number | null;
+  createdAt: string;
+}
+
+export async function listAttachments(book: TradeBook, tradeId: string): Promise<TradeAttachment[]> {
+  if (!USING_REAL_DB) {
+    return demo().attachments.get(`${book}:${tradeId}`) ?? [];
+  }
+  const db = await import("@tradevision/db");
+  const conn = await db.getDb();
+  const rows = await db.listAttachments(conn, (await currentUser()).id, { book, tradeId });
+  return rows.map((r) => ({
+    id: r.id,
+    key: r.key,
+    thumbKey: r.thumbKey,
+    mime: r.mime,
+    size: r.size,
+    width: r.width,
+    height: r.height,
+    createdAt: r.createdAt.toISOString(),
+  }));
+}
+
+export interface NewAttachment {
+  book: TradeBook;
+  tradeId: string;
+  key: string;
+  thumbKey?: string | null;
+  mime: string;
+  size: number;
+  width?: number | null;
+  height?: number | null;
+}
+
+export async function createAttachment(input: NewAttachment): Promise<TradeAttachment> {
+  if (!USING_REAL_DB) {
+    const s = demo();
+    const mapKey = `${input.book}:${input.tradeId}`;
+    const list = s.attachments.get(mapKey) ?? [];
+    if (list.length >= MAX_ATTACHMENTS_PER_TRADE) {
+      throw new Error(`Máximo ${MAX_ATTACHMENTS_PER_TRADE} capturas por operación.`);
+    }
+    const { randomUUID } = await import("node:crypto");
+    const row: DemoAttachment = {
+      id: randomUUID(),
+      key: input.key,
+      thumbKey: input.thumbKey ?? null,
+      mime: input.mime,
+      size: input.size,
+      width: input.width ?? null,
+      height: input.height ?? null,
+      createdAt: new Date().toISOString(),
+    };
+    s.attachments.set(mapKey, [...list, row]);
+    return row;
+  }
+  const db = await import("@tradevision/db");
+  const conn = await db.getDb();
+  const row = await db.createAttachment(conn, (await currentUser()).id, input);
+  return {
+    id: row.id,
+    key: row.key,
+    thumbKey: row.thumbKey,
+    mime: row.mime,
+    size: row.size,
+    width: row.width,
+    height: row.height,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export async function deleteAttachment(input: { id: string; book: TradeBook; tradeId: string }): Promise<void> {
+  if (!USING_REAL_DB) {
+    const s = demo();
+    const mapKey = `${input.book}:${input.tradeId}`;
+    const list = s.attachments.get(mapKey) ?? [];
+    s.attachments.set(
+      mapKey,
+      list.filter((a) => a.id !== input.id),
+    );
+    return;
+  }
+  const db = await import("@tradevision/db");
+  const conn = await db.getDb();
+  await db.deleteAttachment(conn, (await currentUser()).id, input.id);
 }
 
 // ─────────────────────────────  Escrituras  ─────────────────────────────
