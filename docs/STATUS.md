@@ -42,13 +42,14 @@
 **Hecho:**
 - Esquema nuevo (18 tablas, `numeric` para dinero, invariantes de negocio preservadas: trigger append-only, los 3 CHECK, RLS) — aplicado y verificado contra la Supabase real del proyecto (`htezajywbjautjioxvzw`), 0 advisories de seguridad/performance pendientes.
 - `client.ts` (conexión perezosa, sin PGlite) + los 5 repositorios (`trades`, `catalogs`, `users`, `stats`, `accounts`) con conversión `numeric`↔`number` en el borde — probados contra Supabase real, no solo typecheck.
-- `packages/integrations` completo salvo Mentor IA: `round-trips.ts` (motor de reconstrucción por fills), `csv-import.ts`, `storage.ts`, `r2.ts`, `metaapi.ts` (lógica de normalización real; el cliente HTTP sigue stub, sin `METAAPI_TOKEN`).
+- `packages/integrations` completo salvo Mentor IA: `round-trips.ts` (motor de reconstrucción por fills), `csv-import.ts`, `storage.ts`, `r2.ts`, `metaapi.ts` (lógica de normalización real; el cliente HTTP sigue stub, sin `METAAPI_TOKEN`). `csv-import.ts`: corregido un fabricado silencioso — `commission`/`swap` ilegibles (no vacíos) ya no se convertían en `0`, ahora la fila se marca fallida (test de regresión agregado).
+- **Materialización de `stat_snapshots` resuelta:** `materializeStatSnapshots(db, userId, opts)` en `packages/db/src/repositories/stats.ts` — compone `loadTradeSet` → `compute`/`computeRadarScore` (`@tradevision/engine`, nueva dependencia de `packages/db`) → `saveStatSnapshots`. Es el CUERPO invocable que faltaba; no incluye el job Inngest en sí (infra ausente, ver "Falta" e Inngest más abajo — fuera de alcance de `packages/db`/`integrations`). Probado extremo a extremo contra Supabase real vía `pnpm --filter @tradevision/db materialize-stats [handle]` (script nuevo, `src/materialize-stats.ts`): 15 filas insertadas (8 métricas + 6 ejes + compuesto), `sealed`/`book` correctos, sin violar los CHECK. Con el usuario dev actual (0 operaciones verificadas) todo sale `insufficient_data` — no se fabricaron datos para forzar un resultado con valor.
 
 **Falta:**
 - Cliente real de MetaApi (bloqueado por credenciales — ver Bloqueos).
-- Endpoint/UI de importación CSV (el parser ya existe y está probado, falta la ruta que lo invoque).
+- Endpoint/UI de importación CSV (el parser ya existe y está probado, falta la ruta que lo invoque). Nota: tampoco existe todavía en `packages/db` una función que persista un lote parseado (insertar `manual_trades` + fila en `import_batches`) — hoy sólo hay `createManualTrade` operación por operación; evaluar si hace falta un batch al construir esa ruta.
 - Job de sync que llame a `normalizeClosedPositions` y persista `verified_trades`/`trade_executions` — no existe todavía (tampoco existía en el proyecto antiguo).
-- Materialización de `stat_snapshots` (el puente `loadTradeSet`/`saveStatSnapshots` ya existe y está probado; falta qué lo invoque — endpoint, página o job).
+- Job Inngest que dispare `materializeStatSnapshots` (nueva, ver arriba) cuando corresponda (nueva sincronización, sube `ENGINE_VERSION`, cambian filtros guardados — Tech Spec §7). La función ya existe y está probada; falta la infraestructura de jobs en sí.
 - Sin jobs asíncronos (Inngest) — gap heredado, nunca se construyó en el proyecto antiguo tampoco.
 
 **Bloqueos:** `METAAPI_TOKEN` no configurado — sin eso, el cliente real de MetaApi no se puede construir más allá del stub actual.
