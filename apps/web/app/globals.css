@@ -599,6 +599,30 @@ button {
   border-color: var(--accent);
 }
 
+/* Campo de texto libre para crear un chip de catálogo propio */
+.tv-chip-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.tv-chip-add input {
+  flex: 1;
+  min-width: 0;
+  max-width: 280px;
+  font: inherit;
+  font-size: var(--text-body-sm);
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-card);
+  color: var(--text-primary);
+}
+.tv-chip-add input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* Capturas del trade */
 .tv-attach {
   display: flex;

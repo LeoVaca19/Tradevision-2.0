@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { TradeAnnotationProps } from "@tradevision/contracts";
+import { createConfluenceAction, createEmotionalStateAction } from "@/app/trades/actions";
 
 export interface Catalogs {
   setups: { id: string; name: string; family: string | null }[];
@@ -50,6 +51,8 @@ const NUMBER_LABEL: Record<NumberKey, string> = {
   stopLoss: "Stop loss",
   profitTarget: "Objetivo (take profit)",
 };
+
+const NUMBER_HINT = "Distancia en puntos desde la entrada, no precio absoluto.";
 
 const ENUM_KEYS: EnumKey[] = ["htfBias", "executionTimeframe", "marketSession", "checklistCompliance"];
 const NUMBER_KEYS: NumberKey[] = ["stopLoss", "profitTarget"];
@@ -142,39 +145,129 @@ export function PropertiesPanel({
               type="number"
               step="any"
               value={value[key] ?? ""}
+              placeholder="Distancia en puntos"
               onChange={(e) => set(key, e.target.value === "" ? null : Number(e.target.value))}
             />
+            <small className="tv-sample" style={{ marginTop: 0 }}>
+              {NUMBER_HINT}
+            </small>
           </label>
         ))}
       </div>
 
       <div className="tv-subgroup-title">Confluencias vistas</div>
-      <div className="tv-chip-set">
-        {catalogs.confluences.map((c) => (
-          <label key={c.id} className="tv-chip" data-on={value.confluenceIds.includes(c.id)}>
-            <input
-              type="checkbox"
-              checked={value.confluenceIds.includes(c.id)}
-              onChange={() => toggleId("confluenceIds", c.id)}
-            />
-            {c.label}
-          </label>
-        ))}
-      </div>
+      <CatalogChips
+        initialItems={catalogs.confluences}
+        selectedIds={value.confluenceIds}
+        onToggle={(id) => toggleId("confluenceIds", id)}
+        onCreated={(id) => set("confluenceIds", [...value.confluenceIds, id])}
+        create={createConfluenceAction}
+        addLabel="Agregar confluencia"
+      />
 
       <div className="tv-subgroup-title">Estado emocional — privado, nunca se publica (FR-38)</div>
+      <CatalogChips
+        initialItems={catalogs.emotionalStates}
+        selectedIds={value.emotionalStateIds}
+        onToggle={(id) => toggleId("emotionalStateIds", id)}
+        onCreated={(id) => set("emotionalStateIds", [...value.emotionalStateIds, id])}
+        create={createEmotionalStateAction}
+        addLabel="Agregar estado emocional"
+      />
+    </div>
+  );
+}
+
+type CatalogItem = Catalogs["confluences"][number];
+
+/**
+ * Chips de catálogo (confluencias / estados emocionales) + campo de texto libre
+ * para crear uno propio. Al confirmar llama a la Server Action, agrega el chip
+ * y lo deja seleccionado en esta operación. Si el nombre ya existe (sin
+ * distinguir mayúsculas) no se crea uno duplicado: se selecciona el existente.
+ */
+function CatalogChips({
+  initialItems,
+  selectedIds,
+  onToggle,
+  onCreated,
+  create,
+  addLabel,
+}: {
+  initialItems: CatalogItem[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+  onCreated: (id: string) => void;
+  create: (label: string) => Promise<{ id: string; label: string } | null>;
+  addLabel: string;
+}) {
+  const [items, setItems] = useState(initialItems);
+  const [text, setText] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function add() {
+    const label = text.trim();
+    if (!label || pending) return;
+    setError(null);
+
+    const existing = items.find((i) => i.label.toLowerCase() === label.toLowerCase());
+    if (existing) {
+      if (!selectedIds.includes(existing.id)) onToggle(existing.id);
+      setText("");
+      return;
+    }
+
+    setPending(true);
+    try {
+      const row = await create(label);
+      if (!row) {
+        setError("No se pudo crear (¿ya existe con ese nombre?).");
+        return;
+      }
+      setItems((prev) => [...prev, { id: row.id, label: row.label, scope: "custom" }]);
+      onCreated(row.id);
+      setText("");
+    } catch {
+      setError("No se pudo crear. Reintentá.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div>
       <div className="tv-chip-set">
-        {catalogs.emotionalStates.map((c) => (
-          <label key={c.id} className="tv-chip" data-on={value.emotionalStateIds.includes(c.id)}>
-            <input
-              type="checkbox"
-              checked={value.emotionalStateIds.includes(c.id)}
-              onChange={() => toggleId("emotionalStateIds", c.id)}
-            />
+        {items.map((c) => (
+          <label key={c.id} className="tv-chip" data-on={selectedIds.includes(c.id)}>
+            <input type="checkbox" checked={selectedIds.includes(c.id)} onChange={() => onToggle(c.id)} />
             {c.label}
           </label>
         ))}
       </div>
+      <div className="tv-chip-add">
+        <input
+          value={text}
+          maxLength={64}
+          placeholder={`${addLabel}…`}
+          aria-label={addLabel}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void add();
+            }
+          }}
+        />
+        <button type="button" className="tv-btn tv-btn-ghost tv-btn-sm" onClick={() => void add()} disabled={pending || !text.trim()}>
+          {pending ? "Agregando…" : "+ Agregar"}
+        </button>
+      </div>
+      {error ? (
+        <p className="tv-editor-status" data-status="error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

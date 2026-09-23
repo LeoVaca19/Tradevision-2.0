@@ -1,15 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PartialBlock } from "@blocknote/core";
 import type { TradeAnnotationProps } from "@tradevision/contracts";
 import type { TradeBook } from "@/lib/trade-view";
 import { saveAnnotationAction } from "@/app/trades/actions";
+import { useAutosave } from "@/lib/use-autosave";
 import { PropertiesPanel, type Catalogs } from "./PropertiesPanel";
 import { JournalEditorClient, PublicAnnotationEditorClient } from "./EditorsClient";
 
 const AUTOSAVE_MS = 900;
-type Status = "idle" | "saving" | "saved" | "error";
 
 /**
  * Orquestador de la ficha: propiedades + diario + (si aplica) anotación
@@ -18,6 +19,7 @@ type Status = "idle" | "saving" | "saved" | "error";
  *  - el diario tiene el suyo dentro de `JournalEditorClient`
  *    (`saveJournalNoteAction`, que sólo toca `journal_note`).
  * Así ninguno de los dos pisa cambios en paralelo del otro (FR-9).
+ * "Listo" fuerza ambos guardados pendientes y recién entonces vuelve al Diario.
  */
 export function AnnotationWorkspace({
   book,
@@ -34,19 +36,34 @@ export function AnnotationWorkspace({
   catalogs: Catalogs;
   showPublicAnnotation: boolean;
 }) {
+  const router = useRouter();
   const [props, setProps] = useState(initial);
-  const [status, setStatus] = useState<Status>("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const propsRef = useRef(initial);
+  const journalFlush = useRef<(() => Promise<boolean>) | null>(null);
+  const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState(false);
+
+  const { status, schedule, flush: flushProps } = useAutosave(
+    () => saveAnnotationAction({ book, tradeId, props: propsRef.current }),
+    AUTOSAVE_MS,
+  );
 
   function persist(next: TradeAnnotationProps) {
+    propsRef.current = next;
     setProps(next);
-    if (timer.current) clearTimeout(timer.current);
-    setStatus("saving");
-    timer.current = setTimeout(() => {
-      saveAnnotationAction({ book, tradeId, props: next })
-        .then(() => setStatus("saved"))
-        .catch(() => setStatus("error"));
-    }, AUTOSAVE_MS);
+    schedule();
+  }
+
+  async function done() {
+    setFinishing(true);
+    setFinishError(false);
+    const [propsOk, journalOk] = await Promise.all([flushProps(), journalFlush.current?.() ?? true]);
+    if (propsOk && journalOk) {
+      router.push("/trades");
+    } else {
+      setFinishing(false);
+      setFinishError(true);
+    }
   }
 
   return (
@@ -69,7 +86,7 @@ export function AnnotationWorkspace({
 
       <div className="tv-card">
         <h2 className="tv-section-title">Diario</h2>
-        <JournalEditorClient book={book} tradeId={tradeId} initialContent={journalInitial} />
+        <JournalEditorClient book={book} tradeId={tradeId} initialContent={journalInitial} flushRef={journalFlush} />
       </div>
 
       {showPublicAnnotation ? (
@@ -82,6 +99,17 @@ export function AnnotationWorkspace({
           <PublicAnnotationEditorClient tradeId={tradeId} />
         </div>
       ) : null}
+
+      <div className="tv-workspace-done">
+        <button type="button" className="tv-btn" onClick={() => void done()} disabled={finishing}>
+          {finishing ? "Guardando…" : "Listo"}
+        </button>
+        {finishError ? (
+          <p className="tv-editor-status" data-status="error" role="alert">
+            No se pudo guardar todo. Reintentá antes de salir.
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

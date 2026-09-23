@@ -2,19 +2,18 @@
 
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { useRef, useState } from "react";
+import { useEffect } from "react";
 import type { PartialBlock } from "@blocknote/core";
 import { es } from "@blocknote/core/locales";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import type { TradeBook } from "@/lib/trade-view";
 import { saveJournalNoteAction } from "@/app/trades/actions";
+import { useAutosave } from "@/lib/use-autosave";
 
 const AUTOSAVE_MS = 1200;
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
-
-type Status = "idle" | "saving" | "saved" | "error";
 
 async function uploadFile(file: File): Promise<string> {
   if (!ACCEPTED_MIME.has(file.type)) throw new Error("Formato no admitido (usa PNG, JPEG o WebP).");
@@ -44,25 +43,28 @@ export function TradeJournalEditor({
   book,
   tradeId,
   initialContent,
+  flushRef,
 }: {
   book: TradeBook;
   tradeId: string;
   initialContent: PartialBlock[] | undefined;
+  /** El padre lee `flushRef.current()` para forzar el guardado pendiente (botón "Listo"). */
+  flushRef?: { current: (() => Promise<boolean>) | null };
 }) {
-  const [status, setStatus] = useState<Status>("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const editor = useCreateBlockNote({ initialContent, dictionary: es, uploadFile });
 
-  function scheduleSave() {
-    if (timer.current) clearTimeout(timer.current);
-    setStatus("saving");
-    timer.current = setTimeout(() => {
-      saveJournalNoteAction({ book, tradeId, journalNote: editor.document })
-        .then(() => setStatus("saved"))
-        .catch(() => setStatus("error"));
-    }, AUTOSAVE_MS);
-  }
+  const { status, schedule, flush } = useAutosave(
+    () => saveJournalNoteAction({ book, tradeId, journalNote: editor.document }),
+    AUTOSAVE_MS,
+  );
+
+  useEffect(() => {
+    if (!flushRef) return;
+    flushRef.current = flush;
+    return () => {
+      flushRef.current = null;
+    };
+  });
 
   return (
     <div>
@@ -73,7 +75,7 @@ export function TradeJournalEditor({
         {status === "error" && "Error al guardar — reintentá."}
       </p>
       <div className="tv-section-editor">
-        <BlockNoteView editor={editor} theme="light" onChange={scheduleSave} />
+        <BlockNoteView editor={editor} theme="light" onChange={schedule} />
       </div>
     </div>
   );

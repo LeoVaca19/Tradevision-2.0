@@ -25,6 +25,7 @@ export function JournalEditorClient(props: {
   book: TradeBook;
   tradeId: string;
   initialContent: PartialBlock[] | undefined;
+  flushRef?: { current: (() => Promise<boolean>) | null };
 }) {
   return <Journal {...props} />;
 }
