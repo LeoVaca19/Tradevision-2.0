@@ -29,7 +29,7 @@
 - `apps/web/lib/format.ts` (nuevo) — formato compartido de dinero/fecha/etiquetas de métricas y ejes del Radar.
 
 **Falta (fuera de alcance del Bloque 9, a propósito):**
-- `TradeAttachments` (subida de capturas) — no estaba en la lista de componentes pedida y en este entorno demo `/api/uploads` devolvería 503 (sin `SUPABASE_SERVICE_ROLE_KEY`/`R2_*`); la Galería ya sabe pintar `firstAttachmentKey` si algún día llega poblado.
+- **Capturas: subida real SIN PROBAR contra Supabase Storage.** `TradeAttachments` (hasta 3 por operación, en la ficha) y `lib/upload-image.ts` (firmar → PUT → devuelve `key`) están hechos y verificados en el navegador salvo el PUT real: alta/lista/borrado/límite/galería se probaron simulando sólo el paso de subida en la pestaña, y sin storage la UI muestra un mensaje claro (503). **Bloqueo (Leonardo):** `apps/web/.env.local` existe pero no trae `SUPABASE_SERVICE_ROLE_KEY` (sí `DATABASE_URL` y `NEXT_PUBLIC_SUPABASE_URL`) — sin esa clave `/api/uploads` da 503. Al agregarla, probar el ciclo completo: subir → miniatura visible → recargar → Galería del Diario → borrar.
 - `/trades/compare` y `AccountBar` (cuentas nombrables) — no estaban en la lista de páginas del Bloque 9; `lib/data.ts` ya tiene `listTradingAccounts`/`compareTradingAccounts` listos para cuando se pida esa UI.
 - Perfil Público nivel "detail": falta un facade `listVerifiedTrades()` (no existe hoy) para el detalle de operaciones — documentado en la propia página, no se fabricó un listado.
 

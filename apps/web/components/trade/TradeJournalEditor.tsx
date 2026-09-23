@@ -10,27 +10,13 @@ import { BlockNoteView } from "@blocknote/mantine";
 import type { TradeBook } from "@/lib/trade-view";
 import { saveJournalNoteAction } from "@/app/trades/actions";
 import { useAutosave } from "@/lib/use-autosave";
+import { imageUrl, uploadImage } from "@/lib/upload-image";
 
 const AUTOSAVE_MS = 1200;
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-const ACCEPTED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
 
+/** El editor embebe la imagen por URL: se sube y se devuelve la URL de lectura (key codificada). */
 async function uploadFile(file: File): Promise<string> {
-  if (!ACCEPTED_MIME.has(file.type)) throw new Error("Formato no admitido (usa PNG, JPEG o WebP).");
-  if (file.size > MAX_UPLOAD_BYTES) throw new Error("La imagen supera los 10 MB.");
-
-  const presign = await fetch("/api/uploads", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ mime: file.type, size: file.size }),
-  });
-  if (!presign.ok) throw new Error("No se pudo iniciar la subida.");
-  const { uploadUrl, key } = (await presign.json()) as { uploadUrl: string; key: string };
-
-  const put = await fetch(uploadUrl, { method: "PUT", headers: { "content-type": file.type }, body: file });
-  if (!put.ok) throw new Error("La subida de la imagen falló.");
-
-  return `/api/uploads/${key}`;
+  return imageUrl(await uploadImage(file));
 }
 
 /**

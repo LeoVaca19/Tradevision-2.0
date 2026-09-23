@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { sortTrades } from "@tradevision/engine";
 import { formatDate, formatSigned, signClass } from "@/lib/format";
+import { imageUrl } from "@/lib/upload-image";
 import type { JournalTrade } from "@/lib/journal";
 
 export interface CardTrade extends JournalTrade {
@@ -25,7 +26,7 @@ export function TradeCardGrid({ trades }: { trades: readonly CardTrade[] }) {
           <div className="tv-trade-thumb">
             {t.firstAttachmentKey ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={`/api/uploads/${t.firstAttachmentKey}`} alt="" />
+              <img src={imageUrl(t.firstAttachmentKey)} alt="" />
             ) : (
               <div className="tv-trade-thumb-empty">{t.instrument}</div>
             )}

@@ -4,11 +4,13 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PartialBlock } from "@blocknote/core";
 import type { TradeAnnotationProps } from "@tradevision/contracts";
+import type { TradeAttachment } from "@/lib/data";
 import type { TradeBook } from "@/lib/trade-view";
 import { saveAnnotationAction } from "@/app/trades/actions";
 import { useAutosave } from "@/lib/use-autosave";
 import { PropertiesPanel, type Catalogs } from "./PropertiesPanel";
 import { JournalEditorClient, PublicAnnotationEditorClient } from "./EditorsClient";
+import { TradeAttachments } from "./TradeAttachments";
 
 const AUTOSAVE_MS = 900;
 
@@ -27,6 +29,8 @@ export function AnnotationWorkspace({
   initial,
   journalInitial,
   catalogs,
+  attachments,
+  maxAttachments,
   showPublicAnnotation,
 }: {
   book: TradeBook;
@@ -34,6 +38,8 @@ export function AnnotationWorkspace({
   initial: TradeAnnotationProps;
   journalInitial: PartialBlock[] | undefined;
   catalogs: Catalogs;
+  attachments: TradeAttachment[];
+  maxAttachments: number;
   showPublicAnnotation: boolean;
 }) {
   const router = useRouter();
@@ -82,6 +88,11 @@ export function AnnotationWorkspace({
 
       <div className="tv-card">
         <PropertiesPanel value={props} onChange={persist} catalogs={catalogs} />
+      </div>
+
+      <div className="tv-card">
+        <h2 className="tv-section-title">Capturas</h2>
+        <TradeAttachments book={book} tradeId={tradeId} initial={attachments} max={maxAttachments} />
       </div>
 
       <div className="tv-card">

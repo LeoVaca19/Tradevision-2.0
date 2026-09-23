@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { TradeAnnotationProps } from "@tradevision/contracts";
-import { createConfluenceAction, createEmotionalStateAction } from "@/app/trades/actions";
+import { createConfluenceAction, createEmotionalStateAction, createSetupAction } from "@/app/trades/actions";
 import { DecimalInput } from "./DecimalInput";
 
 export interface Catalogs {
@@ -73,11 +73,13 @@ export function PropertiesPanel({
   onChange: (next: TradeAnnotationProps) => void;
   catalogs: Catalogs;
 }) {
+  const [setups, setSetups] = useState(catalogs.setups);
+
   const families = useMemo(() => {
     const set = new Set<string>();
-    for (const s of catalogs.setups) if (s.family) set.add(s.family);
+    for (const s of setups) if (s.family) set.add(s.family);
     return [...set].sort();
-  }, [catalogs.setups]);
+  }, [setups]);
 
   function set<K extends keyof TradeAnnotationProps>(key: K, v: TradeAnnotationProps[K]) {
     onChange({ ...value, [key]: v });
@@ -92,20 +94,15 @@ export function PropertiesPanel({
   return (
     <div className="tv-props-grid">
       <div className="tv-props">
-        <label className="tv-field">
-          <span>Setup</span>
-          <select
-            value={value.setupId ?? ""}
-            onChange={(e) => set("setupId", e.target.value || undefined)}
-          >
-            <option value="">—</option>
-            {catalogs.setups.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SetupField
+          setups={setups}
+          selectedId={value.setupId}
+          onSelect={(id) => set("setupId", id)}
+          onCreated={(row) => {
+            setSetups((prev) => [...prev, row]);
+            set("setupId", row.id);
+          }}
+        />
 
         <label className="tv-field">
           <span>Familia / estilo</span>
@@ -113,6 +110,7 @@ export function PropertiesPanel({
             list="tv-families"
             value={value.setupFamily ?? ""}
             onChange={(e) => set("setupFamily", e.target.value || undefined)}
+            maxLength={64}
             placeholder="p. ej. SMC, ICT…"
           />
           <datalist id="tv-families">
@@ -120,6 +118,9 @@ export function PropertiesPanel({
               <option key={f} value={f} />
             ))}
           </datalist>
+          <small className="tv-sample" style={{ marginTop: 0 }}>
+            Escribí uno nuevo o elegí uno existente.
+          </small>
         </label>
 
         {ENUM_KEYS.map((key) => (
@@ -174,6 +175,131 @@ export function PropertiesPanel({
         addLabel="Agregar estado emocional"
       />
     </div>
+  );
+}
+
+type SetupItem = Catalogs["setups"][number];
+const NEW_SETUP = "__new__";
+
+/**
+ * Select de Setup con opción abierta: "+ Agregar setup…" despliega un formulario
+ * inline (nombre + familia opcional) que llama a `createSetupAction`, agrega el
+ * setup a la lista y lo deja seleccionado. Un nombre repetido (sin distinguir
+ * mayúsculas) selecciona el existente en vez de duplicarlo.
+ */
+function SetupField({
+  setups,
+  selectedId,
+  onSelect,
+  onCreated,
+}: {
+  setups: SetupItem[];
+  selectedId: string | undefined;
+  onSelect: (id: string | undefined) => void;
+  onCreated: (row: SetupItem) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const [family, setFamily] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function close() {
+    setAdding(false);
+    setName("");
+    setFamily("");
+    setError(null);
+  }
+
+  async function add() {
+    const label = name.trim();
+    if (!label || pending) return;
+    setError(null);
+
+    const existing = setups.find((s) => s.name.toLowerCase() === label.toLowerCase());
+    if (existing) {
+      onSelect(existing.id);
+      close();
+      return;
+    }
+
+    setPending(true);
+    try {
+      const row = await createSetupAction(label, family.trim() || undefined);
+      if (!row) {
+        setError("No se pudo crear (¿ya existe con ese nombre?).");
+        return;
+      }
+      onCreated({ id: row.id, name: row.name, family: row.family ?? null });
+      close();
+    } catch {
+      setError("No se pudo crear. Reintentá.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void add();
+    } else if (e.key === "Escape") {
+      close();
+    }
+  }
+
+  return (
+    <>
+      <label className="tv-field">
+        <span>Setup</span>
+        <select
+          value={selectedId ?? ""}
+          onChange={(e) => (e.target.value === NEW_SETUP ? setAdding(true) : onSelect(e.target.value || undefined))}
+        >
+          <option value="">—</option>
+          {setups.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+          <option value={NEW_SETUP}>+ Agregar setup…</option>
+        </select>
+      </label>
+
+      {adding ? (
+        <div className="tv-inline-add" role="group" aria-label="Nuevo setup">
+          <input
+            autoFocus
+            value={name}
+            maxLength={80}
+            placeholder="Nombre, p. ej. Continuación de imbalance"
+            aria-label="Nombre del setup"
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={onKeyDown}
+          />
+          <input
+            list="tv-families"
+            value={family}
+            maxLength={64}
+            placeholder="Familia (opcional)"
+            aria-label="Familia del setup"
+            onChange={(e) => setFamily(e.target.value)}
+            onKeyDown={onKeyDown}
+          />
+          <button type="button" className="tv-btn tv-btn-sm" onClick={() => void add()} disabled={pending || !name.trim()}>
+            {pending ? "Agregando…" : "Agregar"}
+          </button>
+          <button type="button" className="tv-btn tv-btn-ghost tv-btn-sm" onClick={close} disabled={pending}>
+            Cancelar
+          </button>
+          {error ? (
+            <p className="tv-editor-status" data-status="error" role="alert" style={{ flexBasis: "100%" }}>
+              {error}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </>
   );
 }
 

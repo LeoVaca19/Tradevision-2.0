@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import type { PartialBlock } from "@blocknote/core";
 import { AnnotationWorkspace } from "@/components/trade/AnnotationWorkspace";
 import { StatBadge } from "@/components/StatBadge";
-import { currentUser, getTradeView, listCatalogs } from "@/lib/data";
+import { currentUser, getTradeView, listAttachments, listCatalogs } from "@/lib/data";
+import { MAX_ATTACHMENTS_PER_TRADE } from "@/lib/demo-store";
 import { BOOK_LABEL, toAnnotationProps, toBlockNoteContent, type TradeBook } from "@/lib/trade-view";
 import { formatDate, formatDateTime, formatSigned, NOT_TAKEN_REASON_LABEL, signClass, SIDE_LABEL } from "@/lib/format";
 
@@ -36,7 +37,12 @@ export default async function TradeRecordPage({
   if (!BOOKS.includes(rawBook as TradeBook)) notFound();
   const book = rawBook as TradeBook;
 
-  const [user, view, catalogs] = await Promise.all([currentUser(), getTradeView(book, id), listCatalogs()]);
+  const [user, view, catalogs, attachments] = await Promise.all([
+    currentUser(),
+    getTradeView(book, id),
+    listCatalogs(),
+    listAttachments(book, id),
+  ]);
   if (!view) notFound();
 
   const initialProps = toAnnotationProps(view.annotation as Parameters<typeof toAnnotationProps>[0]);
@@ -93,6 +99,8 @@ export default async function TradeRecordPage({
         initial={initialProps}
         journalInitial={journalInitial}
         catalogs={catalogs}
+        attachments={attachments}
+        maxAttachments={MAX_ATTACHMENTS_PER_TRADE}
         showPublicAnnotation={book === "verified" && user.tier === "mentor"}
       />
     </div>

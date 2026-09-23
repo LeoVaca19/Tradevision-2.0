@@ -623,6 +623,34 @@ button {
   border-color: var(--accent);
 }
 
+/* Alta inline de un setup (nombre + familia opcional), ocupa toda la fila del grid */
+.tv-inline-add {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+.tv-inline-add input {
+  flex: 1 1 200px;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--text-body-sm);
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-primary);
+}
+.tv-inline-add input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* Capturas del trade */
 .tv-attach {
   display: flex;
@@ -668,6 +696,31 @@ button {
 }
 .tv-attach-remove:hover {
   background: var(--state-revoked);
+}
+.tv-attach-add {
+  width: 100%;
+  height: 122px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+}
+.tv-attach-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tv-attach-note {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-body-sm);
 }
 
 .tv-editor-status {
