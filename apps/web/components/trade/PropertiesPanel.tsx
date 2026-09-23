@@ -270,14 +270,15 @@ function CatalogChips({
   );
 }
 
-const DECIMAL_TEXT = /^[0-9]*[.,]?[0-9]*$/;
+const DECIMAL_TEXT = /^[0-9]*\.?[0-9]*$/;
 
 /**
- * Número decimal que acepta "12,5" y "12.5". `type="number"` de Chrome bloquea
- * la coma, así que se edita como texto (se descartan letras/espacios; se
- * rechaza un segundo separador) y al padre sólo le llega el número ya
- * parseado: `null` si no hay ningún dígito.
- * El texto se guarda aparte para no perder la coma mientras se tipea ("12,").
+ * Número decimal que acepta "12,5" y "12.5" y siempre se muestra con punto.
+ * `type="number"` de Chrome bloquea la coma, así que se edita como texto: la
+ * coma se convierte en punto, se descartan letras/espacios y se rechaza un
+ * segundo separador. Al padre sólo le llega el número ya parseado: `null` si
+ * no hay ningún dígito.
+ * El texto se guarda aparte para no perder el separador mientras se tipea ("12.").
  */
 function DecimalInput({
   value,
@@ -288,7 +289,7 @@ function DecimalInput({
   onChange: (n: number | null) => void;
   placeholder?: string;
 }) {
-  const [text, setText] = useState(value == null ? "" : String(value).replace(".", ","));
+  const [text, setText] = useState(value == null ? "" : String(value));
 
   return (
     <input
@@ -297,10 +298,10 @@ function DecimalInput({
       value={text}
       placeholder={placeholder}
       onChange={(e) => {
-        const next = e.target.value.replace(/[^0-9.,]/g, "");
+        const next = e.target.value.replace(/[^0-9.,]/g, "").replace(/,/g, ".");
         if (!DECIMAL_TEXT.test(next)) return;
         setText(next);
-        const n = Number(next.replace(",", "."));
+        const n = Number(next);
         onChange(/[0-9]/.test(next) && Number.isFinite(n) ? n : null);
       }}
     />
