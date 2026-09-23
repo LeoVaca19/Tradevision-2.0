@@ -57,6 +57,34 @@
 - Job Inngest que dispare `materializeStatSnapshots` (nueva, ver arriba) cuando corresponda (nueva sincronización, sube `ENGINE_VERSION`, cambian filtros guardados — Tech Spec §7). La función ya existe y está probada; falta la infraestructura de jobs en sí.
 - Sin jobs asíncronos (Inngest) — gap heredado, nunca se construyó en el proyecto antiguo tampoco.
 
+### Auth (Supabase Auth) — contrato
+
+**Migración `0002_auth_link_and_policies.sql`** (aplicada a Supabase real vía `pnpm db:setup`, 2026-09-23): trigger `on_auth_user_created` en `auth.users` → crea la fila en `public.users` (`auth_provider_id = auth.users.id::text`, `handle = <local-part>-<4 hex del id>`, `tier = free`); función `current_app_user_id()`; policy `own_rows` (FOR ALL, `authenticated`) en las 11 tablas con `user_id` + `own_row` (SELECT) en `users`. **Son defensa en profundidad:** la app conecta como `postgres` (bypass de RLS) y los grants a `anon`/`authenticated` siguen revocados (`rls.sql`); el aislamiento efectivo hoy es el `userId` de la sesión en cada repositorio. Advisors tras aplicar: security = 6 INFO `rls_enabled_no_policy` (tablas hijas/catálogos, deny-all intencional, ya existían) + 1 WARN `authenticated_security_definer_function_executable` en `current_app_user_id()` (aceptado: sólo devuelve el id del propio llamador y las policies lo necesitan); performance = sólo `unused_index` INFO.
+
+**API (`@tradevision/db`):**
+- `supabaseEnv(): { url, anonKey } | null` — lee `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` (o `SUPABASE_URL`/`SUPABASE_ANON_KEY`).
+- `createSupabaseServerClient(cookies: CookieMethodsServer): SupabaseClient` — cookies inyectadas (el paquete no depende de Next). Sólo anon key; la service role no se usa.
+- `getSessionUser(supabase, db): Promise<SessionUser | null>` — usa `auth.getUser()` (valida el JWT; NO `getSession()`); `SessionUser = UserBasics & { email }` = `{ id, handle, email, tier, delayWindowDays, publicProfileLevel }`; `null` sin sesión o si falta la fila.
+
+**Ejemplo mínimo (Next, ver `apps/web/lib/supabase-server.ts`):**
+```ts
+const db = await import("@tradevision/db");
+const store = await cookies(); // next/headers
+const supabase = db.createSupabaseServerClient({
+  getAll: () => store.getAll(),
+  setAll: (l) => { try { l.forEach(({ name, value, options }) => store.set(name, value, options)); } catch {} },
+});
+const user = await db.getSessionUser(supabase, await db.getDb()); // SessionUser | null
+```
+
+**Entorno:** `DATABASE_URL` (web: pooler 6543; `packages/db/.env`: 5432 para migraciones), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Nunca la service role en el cliente. Aviso de shell: la contraseña de `DATABASE_URL` puede contener `$`; NO hacer `source .env` (el shell la expande y rompe la URL) — usar `node --env-file=...` o los loaders propios (`setup.ts`).
+
+**`getFirstUser`** queda sólo para scripts de dev (`materialize-stats`); la ruta real de la web ya no lo usa (ni `DEV_USER_ID`).
+
+**Frontend/Auth (mismo trabajo):** `apps/web/middleware.ts` (refresca sesión; redirige `/dashboard` y `/trades/**` → `/login`; `/login` con sesión → `/dashboard`; `/api/*` responde 401 por sí mismo), `app/login` (`authAction` única con campo `mode`), `lib/data.ts` → `currentUserOrNull()`/`currentUser()` (lanza sin sesión) sólo en la rama `USING_REAL_DB`; el modo demo queda igual.
+
+**Supabase Auth requiere "Confirm email" desactivado para probar rápido:** hoy está ACTIVO en el proyecto (el alta no deja sesión hasta el clic; además el SMTP por defecto limita los correos: `email rate limit exceeded`). Site URL / Redirect URLs deben ser `http://localhost:3100`.
+
 **Bloqueos:** `METAAPI_TOKEN` no configurado — sin eso, el cliente real de MetaApi no se puede construir más allá del stub actual.
 
 ---

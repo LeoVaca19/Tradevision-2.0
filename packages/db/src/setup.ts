@@ -11,7 +11,7 @@ import * as schema from "./schema.js";
  *   2. instala el trigger append-only de `sql/append_only.sql`
  *   3. activa RLS + revoca grants de la Data API (`sql/rls.sql`)
  *   4. siembra catálogos globales
- *   5. crea un usuario `dev` (sin auth real todavía) e imprime su id para `DEV_USER_ID`
+ *   5. crea un usuario `dev` sembrado (no ligado a Supabase Auth; sólo para scripts de dev)
  *
  *   pnpm --filter @tradevision/db exec tsx src/setup.ts
  *
@@ -101,7 +101,6 @@ async function main() {
   await sql.end();
 
   console.log("\n✔ Base de datos lista.");
-  console.log(`\n  Añade a apps/web/.env.local:\n    DEV_USER_ID=${user!.id}\n`);
 }
 
 main().catch((err) => {

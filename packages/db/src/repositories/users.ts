@@ -24,7 +24,7 @@ export async function getUserById(db: DB, id: string): Promise<UserBasics | null
   return row ?? null;
 }
 
-/** Dev-only: primer usuario por antigüedad. Sustituir por auth real. */
+/** Dev-only (scripts como materialize-stats). NO usar en rutas de la web: el usuario sale de `getSessionUser`. */
 export async function getFirstUser(db: DB): Promise<UserBasics | null> {
   const [row] = await db
     .select({

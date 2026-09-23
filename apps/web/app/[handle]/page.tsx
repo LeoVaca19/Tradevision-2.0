@@ -3,7 +3,7 @@ import type { Metric } from "@tradevision/contracts";
 import { MetricCard } from "@/components/MetricCard";
 import { StatBadge } from "@/components/StatBadge";
 import { RadarChart, type RadarAxisPoint } from "@/components/dashboard/RadarChart";
-import { currentUser, getDashboardStats } from "@/lib/data";
+import { currentUserOrNull, getDashboardStats } from "@/lib/data";
 import { radarAxisLabel } from "@/lib/format";
 
 export const revalidate = 300;
@@ -12,16 +12,14 @@ const HEADLINE: Metric[] = ["win_rate", "profit_factor"];
 const FULL: Metric[] = ["win_rate", "expectancy", "r_multiple_avg", "profit_factor", "max_drawdown", "streaks"];
 
 /**
- * Perfil Público (FR-34). Hoy resuelve un único usuario dev/demo — sin auth
- * real todavía (MIGRATION_PLAN.md §3.1), así que sólo el propio handle
- * responde; cualquier otro es 404 en vez de inventar un perfil ajeno.
+ * Perfil Público (FR-34). Sólo responde el handle del usuario en sesión (o el demo); cualquier otro es 404 en vez de inventar un perfil ajeno.
  */
 export default async function PublicProfilePage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle: raw } = await params;
   const handle = raw.replace(/^@/, "").toLowerCase();
 
-  const user = await currentUser();
-  if (handle !== user.handle) notFound();
+  const user = await currentUserOrNull();
+  if (!user || handle !== user.handle) notFound();
 
   const level = user.publicProfileLevel;
 

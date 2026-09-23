@@ -36,13 +36,21 @@ export const USING_REAL_DB =
 
 // ─────────────────────────────  Usuario  ─────────────────────────────
 
-export async function currentUser(): Promise<DemoUser> {
+/**
+ * Usuario de la sesión de Supabase Auth (rama BD real) o el de la demo en
+ * memoria. Sin sesión → `null`; `currentUser()` lanza (los Route Handlers lo
+ * traducen a 401 y las páginas protegidas ya las filtra el middleware).
+ */
+export async function currentUserOrNull(): Promise<DemoUser | null> {
   if (!USING_REAL_DB) return demo().user;
   const db = await import("@tradevision/db");
-  const conn = await db.getDb();
-  const devId = process.env.DEV_USER_ID;
-  const u = devId ? await db.getUserById(conn, devId) : await db.getFirstUser(conn);
-  if (!u) throw new Error("No hay usuarios en la BD. Ejecuta `pnpm db:setup`.");
+  const { getSupabase } = await import("@/lib/supabase-server");
+  return db.getSessionUser(await getSupabase(), await db.getDb());
+}
+
+export async function currentUser(): Promise<DemoUser> {
+  const u = await currentUserOrNull();
+  if (!u) throw new Error("No autenticado.");
   return u;
 }
 
