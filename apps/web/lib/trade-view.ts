@@ -15,6 +15,8 @@ interface AnnotationRow {
   executionTimeframe?: string | null;
   marketSession?: string | null;
   checklistCompliance?: string | null;
+  stopLoss?: number | null;
+  profitTarget?: number | null;
   extra?: unknown;
   emotionalStateIds?: string[];
   confluenceIds?: string[];
@@ -30,6 +32,8 @@ export function toAnnotationProps(row: AnnotationRow | null | undefined): TradeA
     executionTimeframe: row?.executionTimeframe ?? undefined,
     marketSession: row?.marketSession ?? undefined,
     checklistCompliance: row?.checklistCompliance ?? undefined,
+    stopLoss: row?.stopLoss ?? undefined,
+    profitTarget: row?.profitTarget ?? undefined,
     confluenceIds: row?.confluenceIds ?? [],
     emotionalStateIds: row?.emotionalStateIds ?? [],
     extra: (row?.extra as Record<string, unknown> | undefined) ?? undefined,

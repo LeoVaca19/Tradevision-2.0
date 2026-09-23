@@ -141,12 +141,10 @@ export function PropertiesPanel({
         {NUMBER_KEYS.map((key) => (
           <label className="tv-field" key={key}>
             <span>{NUMBER_LABEL[key]}</span>
-            <input
-              type="number"
-              step="any"
-              value={value[key] ?? ""}
+            <DecimalInput
+              value={value[key]}
               placeholder="Distancia en puntos"
-              onChange={(e) => set(key, e.target.value === "" ? null : Number(e.target.value))}
+              onChange={(n) => set(key, n)}
             />
             <small className="tv-sample" style={{ marginTop: 0 }}>
               {NUMBER_HINT}
@@ -269,5 +267,42 @@ function CatalogChips({
         </p>
       ) : null}
     </div>
+  );
+}
+
+const DECIMAL_TEXT = /^[0-9]*[.,]?[0-9]*$/;
+
+/**
+ * Número decimal que acepta "12,5" y "12.5". `type="number"` de Chrome bloquea
+ * la coma, así que se edita como texto (se descartan letras/espacios; se
+ * rechaza un segundo separador) y al padre sólo le llega el número ya
+ * parseado: `null` si no hay ningún dígito.
+ * El texto se guarda aparte para no perder la coma mientras se tipea ("12,").
+ */
+function DecimalInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: number | null | undefined;
+  onChange: (n: number | null) => void;
+  placeholder?: string;
+}) {
+  const [text, setText] = useState(value == null ? "" : String(value).replace(".", ","));
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={text}
+      placeholder={placeholder}
+      onChange={(e) => {
+        const next = e.target.value.replace(/[^0-9.,]/g, "");
+        if (!DECIMAL_TEXT.test(next)) return;
+        setText(next);
+        const n = Number(next.replace(",", "."));
+        onChange(/[0-9]/.test(next) && Number.isFinite(n) ? n : null);
+      }}
+    />
   );
 }
