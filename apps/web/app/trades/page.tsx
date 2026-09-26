@@ -50,7 +50,7 @@ export default async function TradesPage({ searchParams }: { searchParams: Promi
       <div className="tv-page-head">
         <div>
           <h1>Diario</h1>
-          <p>Libro Manual — Estadística Declarada, nunca lleva Sello (FR-10).</p>
+          <p>Libro Manual — Estadística Declarada, nunca lleva Sello.</p>
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           {!USING_REAL_DB ? (

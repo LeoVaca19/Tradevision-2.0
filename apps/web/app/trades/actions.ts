@@ -94,7 +94,7 @@ const PublicAnnotationInput = z.object({
 export async function savePublicAnnotationAction(input: z.infer<typeof PublicAnnotationInput>) {
   const user = await data.currentUser();
   if (user.tier !== "mentor") {
-    return { ok: false as const, error: "Requiere tier Mentor (FR-64)." };
+    return { ok: false as const, error: "Requiere tier Mentor." };
   }
   const { verifiedTradeId, body, publish } = PublicAnnotationInput.parse(input);
   const row = await data.savePublicAnnotation({ verifiedTradeId, body, publish });

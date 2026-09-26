@@ -80,7 +80,7 @@ export function NewManualTradeForm() {
         </button>
       </p>
       <p className="tv-sample">
-        Esta operación queda en el Libro Manual: Declarada, nunca lleva Sello (FR-10).
+        Esta operación queda en el Libro Manual: Declarada, nunca lleva Sello.
       </p>
     </form>
   );

@@ -104,7 +104,7 @@ export function AnnotationWorkspace({
         <div className="tv-card">
           <h2 className="tv-section-title">Anotación pública</h2>
           <p className="tv-sample" style={{ marginBottom: 12 }}>
-            Visible en tu Perfil Público, sujeta a la Ventana de Retardo (FR-64). Cada guardado crea
+            Visible en tu Perfil Público, sujeta a la Ventana de Retardo. Cada guardado crea
             una versión nueva; nunca reescribe la anterior.
           </p>
           <PublicAnnotationEditorClient tradeId={tradeId} />

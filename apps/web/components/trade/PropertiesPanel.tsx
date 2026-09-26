@@ -53,6 +53,8 @@ const NUMBER_LABEL: Record<NumberKey, string> = {
   profitTarget: "Objetivo (take profit)",
 };
 
+const FAMILY_HELP = "Estilo o escuela que agrupa varios setups (ICT, SMC, Price Action); sirve para comparar tus estadísticas por estilo.";
+
 const NUMBER_HINT = "Distancia en puntos desde la entrada, no precio absoluto.";
 
 const ENUM_KEYS: EnumKey[] = ["htfBias", "executionTimeframe", "marketSession", "checklistCompliance"];
@@ -85,6 +87,22 @@ export function PropertiesPanel({
     onChange({ ...value, [key]: v });
   }
 
+  /**
+   * Elige un setup (o ninguno) y autocompleta "Familia / estilo" con la del
+   * setup si la tiene. Sólo pisa la familia si está vacía o si es la del setup
+   * anterior (o sea, no la escribió el usuario a mano); sigue siendo editable.
+   * Un único `onChange`, para no pisar un cambio con el valor viejo.
+   */
+  function applySetup(next: SetupItem | undefined) {
+    const prev = setups.find((s) => s.id === value.setupId);
+    const canFill = !value.setupFamily || value.setupFamily === prev?.family;
+    onChange({
+      ...value,
+      setupId: next?.id,
+      ...(next?.family && canFill ? { setupFamily: next.family } : {}),
+    });
+  }
+
   function toggleId(key: "confluenceIds" | "emotionalStateIds", id: string) {
     const current = value[key];
     const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
@@ -97,10 +115,10 @@ export function PropertiesPanel({
         <SetupField
           setups={setups}
           selectedId={value.setupId}
-          onSelect={(id) => set("setupId", id)}
+          onSelect={(id) => applySetup(setups.find((s) => s.id === id))}
           onCreated={(row) => {
             setSetups((prev) => [...prev, row]);
-            set("setupId", row.id);
+            applySetup(row);
           }}
         />
 
@@ -119,7 +137,7 @@ export function PropertiesPanel({
             ))}
           </datalist>
           <small className="tv-sample" style={{ marginTop: 0 }}>
-            Escribí uno nuevo o elegí uno existente.
+            {FAMILY_HELP} Opcional: escribí uno nuevo o elegí uno existente.
           </small>
         </label>
 
@@ -165,7 +183,7 @@ export function PropertiesPanel({
         addLabel="Agregar confluencia"
       />
 
-      <div className="tv-subgroup-title">Estado emocional — privado, nunca se publica (FR-38)</div>
+      <div className="tv-subgroup-title">Estado emocional — privado, nunca se publica</div>
       <CatalogChips
         initialItems={catalogs.emotionalStates}
         selectedIds={value.emotionalStateIds}
@@ -286,6 +304,9 @@ function SetupField({
             onChange={(e) => setFamily(e.target.value)}
             onKeyDown={onKeyDown}
           />
+          <p className="tv-sample" style={{ flexBasis: "100%", margin: 0 }}>
+            Familia: {FAMILY_HELP.charAt(0).toLowerCase() + FAMILY_HELP.slice(1)} Podés dejarla vacía.
+          </p>
           <button type="button" className="tv-btn tv-btn-sm" onClick={() => void add()} disabled={pending || !name.trim()}>
             {pending ? "Agregando…" : "Agregar"}
           </button>

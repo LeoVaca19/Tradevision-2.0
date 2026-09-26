@@ -131,7 +131,7 @@ export default async function DashboardPage() {
               </div>
               <span className="tv-sample">
                 n={stats.planVsExecuted.notTaken.count} · fuera del MVP hasta que exista el estimador
-                (FR-25) — hoy siempre sin dato
+                — hoy siempre sin dato
               </span>
             </div>
           </div>
