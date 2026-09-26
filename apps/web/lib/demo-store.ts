@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { TradeAnnotationProps } from "@tradevision/contracts";
+import type { ExitReason, TradeAnnotationProps } from "@tradevision/contracts";
 import type { TradeBook } from "@/lib/trade-view";
 
 /**
@@ -35,6 +35,8 @@ export interface CoreTrade {
   pnlCurrency: number;
   pnlR: number | null;
   verified: boolean;
+  /** Sólo operaciones manuales; las sembradas de la demo no lo traen (no se inventa). */
+  exitReason?: ExitReason | null;
 }
 
 export interface NotTaken {

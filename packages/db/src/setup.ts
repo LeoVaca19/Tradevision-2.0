@@ -77,24 +77,23 @@ async function main() {
     "Sesión de Londres/NY",
     "Confirmación en LTF",
   ];
+  // Catálogos GLOBALES (user_id NULL). Idempotentes gracias a las UNIQUE
+  // NULLS NOT DISTINCT (migración 0004): con el UNIQUE normal, `on conflict do
+  // nothing` nunca disparaba para user_id NULL y cada corrida agregaba otra copia.
   await sql`insert into emotional_states ${sql(emo.map((label) => ({ label })), "label")} on conflict do nothing`;
   await sql`insert into confluences ${sql(conf.map((label) => ({ label })), "label")} on conflict do nothing`;
+  await sql`
+    insert into setups (user_id, name, family) values
+      (null, 'FVG + CHoCH', 'SMC'),
+      (null, 'Silver Bullet', 'ICT'),
+      (null, 'Ruptura de rango asiático', 'Price Action')
+    on conflict do nothing
+  `;
 
   console.log("→ creando usuario dev…");
   await sql`
     insert into users (auth_provider_id, handle, email, tier)
     values ('dev:leonardo', 'leonardo', 'leonardo.dev@tradevision.local', 'mentor')
-    on conflict do nothing
-  `;
-  const [user] = await sql<{ id: string }[]>`select id from users where handle = 'leonardo'`;
-
-  await sql`
-    insert into setups (user_id, name, family)
-    select ${user!.id}, v.name, v.family from (values
-      ('FVG + CHoCH', 'SMC'),
-      ('Silver Bullet', 'ICT'),
-      ('Ruptura de rango asiático', 'Price Action')
-    ) as v(name, family)
     on conflict do nothing
   `;
 

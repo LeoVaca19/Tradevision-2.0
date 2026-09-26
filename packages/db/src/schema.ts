@@ -62,6 +62,8 @@ export const publicProfileLevel = pgEnum("public_profile_level", [
 ]);
 export const tradeSide = pgEnum("trade_side", ["long", "short"]);
 export const tradeOutcome = pgEnum("trade_outcome", ["win", "loss", "breakeven"]);
+/** Cómo cerró una operación MANUAL (Take profit / Break even / Stop loss). No es `trade_outcome`, que es el resultado hipotético de las no tomadas. */
+export const exitReason = pgEnum("exit_reason", ["take_profit", "break_even", "stop_loss"]);
 export const manualSource = pgEnum("manual_source", ["hand", "csv_import", "pdf_import"]);
 export const notTakenReason = pgEnum("not_taken_reason", [
   "fear",
@@ -207,19 +209,22 @@ export const connectedAccounts = pgTable(
 
 // ─────────────────────────────  Catálogos  ─────────────────────────────
 
+// Los tres catálogos comparten el mismo alcance: `user_id` NULL = global (visible
+// para todos), si no = custom del usuario. La unicidad usa NULLS NOT DISTINCT:
+// con el UNIQUE normal, dos filas globales con la misma etiqueta NO chocan
+// (en Postgres NULL <> NULL) y cada `db:setup` acumulaba otra copia del seed.
 export const setups = pgTable(
   "setups",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    /** null = setup global (los 3 iniciales); si no, custom del usuario. */
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     /** Familia / estilo — catálogo abierto (FR-21 / FR-66): SMC, ICT, Price Action… */
     family: text("family"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique("setups_user_name_uq").on(t.userId, t.name)],
+  (t) => [unique("setups_user_name_uq").on(t.userId, t.name).nullsNotDistinct()],
 );
 
 export const emotionalStates = pgTable(
@@ -230,7 +235,7 @@ export const emotionalStates = pgTable(
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     label: text("label").notNull(),
   },
-  (t) => [unique("emotional_states_scope_label_uq").on(t.userId, t.label)],
+  (t) => [unique("emotional_states_scope_label_uq").on(t.userId, t.label).nullsNotDistinct()],
 );
 
 export const confluences = pgTable(
@@ -240,7 +245,7 @@ export const confluences = pgTable(
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     label: text("label").notNull(),
   },
-  (t) => [unique("confluences_scope_label_uq").on(t.userId, t.label)],
+  (t) => [unique("confluences_scope_label_uq").on(t.userId, t.label).nullsNotDistinct()],
 );
 
 // ─────────────────────────────  Importación  ─────────────────────────────
@@ -378,6 +383,8 @@ export const manualTrades = pgTable(
     swap: money("swap").notNull().default("0"),
     pnlCurrency: money("pnl_currency").notNull(),
     pnlR: numeric("pnl_r", { precision: 12, scale: 6 }),
+    /** Cómo cerró (TP / BE / SL). NULLABLE: las operaciones anteriores al campo no lo tienen. */
+    exitReason: exitReason("exit_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

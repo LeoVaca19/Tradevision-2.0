@@ -3,8 +3,10 @@ import type { DB } from "../client.js";
 import { confluences, emotionalStates, setups } from "../schema.js";
 
 /**
- * Catálogos del registro tipo Notion (Tech Spec §6.1). `emotional_states` y
- * `confluences` tienen alcance global (`user_id IS NULL`) + custom por usuario.
+ * Catálogos del registro tipo Notion (Tech Spec §6.1). `setups`,
+ * `emotional_states` y `confluences` tienen alcance global (`user_id IS NULL`,
+ * visible para todos) + custom por usuario. La unicidad de los tres es
+ * NULLS NOT DISTINCT, así que no puede haber dos globales con la misma etiqueta.
  */
 
 export interface CatalogItem {
@@ -17,7 +19,7 @@ export async function listSetups(db: DB, userId: string) {
   return db
     .select({ id: setups.id, name: setups.name, family: setups.family })
     .from(setups)
-    .where(eq(setups.userId, userId))
+    .where(or(isNull(setups.userId), eq(setups.userId, userId)))
     .orderBy(asc(setups.name));
 }
 

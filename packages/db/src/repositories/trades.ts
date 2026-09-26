@@ -1,5 +1,5 @@
 import { and, desc, eq, sql } from "drizzle-orm";
-import type { TradeAnnotationProps } from "@tradevision/contracts";
+import type { ExitReason, TradeAnnotationProps } from "@tradevision/contracts";
 import type { DB } from "../client.js";
 import {
   annotationConfluences,
@@ -73,6 +73,8 @@ export interface ManualTradeInput {
   swap?: number;
   pnlCurrency: number;
   pnlR?: number | null;
+  /** Cómo cerró (TP / BE / SL). Opcional: el CSV importado, p. ej., no lo trae. */
+  exitReason?: ExitReason | null;
   source?: "hand" | "csv_import" | "pdf_import";
   importBatchId?: string | null;
 }
@@ -96,6 +98,7 @@ export async function createManualTrade(db: DB, userId: string, input: ManualTra
       swap: toDbNumeric(input.swap ?? 0),
       pnlCurrency: toDbNumeric(input.pnlCurrency),
       pnlR: toDbNumericOrNull(input.pnlR ?? null),
+      exitReason: input.exitReason ?? null,
     })
     .returning();
   return convertCoreMoney(row!);

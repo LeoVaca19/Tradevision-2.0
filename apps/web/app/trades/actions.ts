@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { TradeAnnotationProps } from "@tradevision/contracts";
+import { ExitReason, TradeAnnotationProps } from "@tradevision/contracts";
 import * as data from "@/lib/data";
 
 const TradeBook = z.enum(["verified", "manual", "not_taken"]);
@@ -24,6 +24,12 @@ const ManualTradeForm = z
       .union([z.coerce.number(), z.literal("")])
       .optional()
       .transform((v) => (v === "" || v == null ? null : Number(v))),
+    // Cómo cerró (TP / BE / SL). Opcional en el Zod para no romper el formulario
+    // actual; la UI decide si lo exige. Vacío -> null.
+    exitReason: z
+      .union([ExitReason, z.literal("")])
+      .optional()
+      .transform((v) => (v === "" || v == null ? null : v)),
   })
   .refine((v) => new Date(v.closedAt) >= new Date(v.openedAt), {
     message: "el cierre no puede ser anterior a la apertura",
@@ -48,6 +54,7 @@ export async function createManualTradeAction(_prev: unknown, formData: FormData
     swap: d.swap,
     pnlCurrency: d.pnlCurrency,
     pnlR: d.pnlR,
+    exitReason: d.exitReason,
   });
   redirect(`/trades/manual/${trade.id}`);
 }

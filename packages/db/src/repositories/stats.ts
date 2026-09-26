@@ -168,6 +168,7 @@ export async function loadTradeSet(
     connectedAccountId: null,
     engineIngestVersion: "0",
     source: t.source,
+    exitReason: t.exitReason,
   }));
 
   const notTaken: NotTakenTrade[] = notTakenRows.map((t) => ({

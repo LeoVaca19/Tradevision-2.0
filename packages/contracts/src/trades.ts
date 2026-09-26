@@ -9,6 +9,14 @@ export const TradeOutcome = z.enum(["win", "loss", "breakeven"]);
 export type TradeOutcome = z.infer<typeof TradeOutcome>;
 
 /**
+ * Cómo cerró una operación MANUAL: Take profit / Break even / Stop loss. Es la
+ * pregunta principal al registrar. No es `TradeOutcome`, que es el resultado
+ * hipotético de una operación No Tomada.
+ */
+export const ExitReason = z.enum(["take_profit", "break_even", "stop_loss"]);
+export type ExitReason = z.infer<typeof ExitReason>;
+
+/**
  * Datos INMUTABLES de una operación (Tech Spec §5.1). Origen: sincronización de
  * bróker (verified) o alta manual / import (manual). El motor sólo consume estos
  * campos; jamás los de enriquecimiento.
@@ -50,6 +58,8 @@ export const ManualTrade = TradeCore.extend({
   book: z.literal("manual"),
   verified: z.literal(false),
   source: z.enum(["hand", "csv_import", "pdf_import"]).default("hand"),
+  /** Opcional y nullable: las operaciones anteriores al campo no lo tienen (aditivo). */
+  exitReason: ExitReason.nullable().optional(),
 });
 export type ManualTrade = z.infer<typeof ManualTrade>;
 

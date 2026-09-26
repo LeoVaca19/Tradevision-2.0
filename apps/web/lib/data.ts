@@ -1,5 +1,6 @@
 import type {
   AccountComparison,
+  ExitReason,
   PlanVsExecuted,
   RadarScore,
   StatResult,
@@ -274,6 +275,8 @@ export interface NewManualTrade {
   swap: number;
   pnlCurrency: number;
   pnlR: number | null;
+  /** Cómo cerró (TP / BE / SL). Opcional: las operaciones anteriores al campo no lo tienen. */
+  exitReason?: ExitReason | null;
 }
 
 export async function createManualTrade(input: NewManualTrade): Promise<{ id: string }> {
